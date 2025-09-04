@@ -7,8 +7,6 @@ resource "google_discovery_engine_data_store" "rag_corpus" {
   content_config   = "CONTENT_REQUIRED"
   solution_types   = ["SOLUTION_TYPE_SEARCH"]
   industry_vertical = "GENERIC"
-
-  create_time = timestamp()
 }
 
 # Search engine for the data store

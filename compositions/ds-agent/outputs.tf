@@ -29,9 +29,9 @@ output "staging_bucket_url" {
 }
 
 # IAM Outputs
-output "vertex_ai_service_account_email" {
-  description = "Email of the Vertex AI service account"
-  value       = module.iam.vertex_ai_service_account_email
+output "iam_vertex_ai_service_account_email" {
+  description = "Email of the primary Vertex AI service account from IAM module"
+  value       = module.iam.primary_vertex_ai_service_account
 }
 
 # BigQuery Outputs
@@ -46,28 +46,39 @@ output "bigquery_dataset_location" {
 }
 
 # Vertex AI Outputs
-output "vertex_ai_agent_id" {
-  description = "Vertex AI agent (reasoning engine) ID"
-  value       = module.vertex_ai.agent_id
+output "vertex_ai_service_account_email" {
+  description = "Service account email for Agent Engine operations"
+  value       = module.vertex_ai.service_account_email
 }
 
-output "vertex_ai_agent_name" {
-  description = "Vertex AI agent (reasoning engine) name"
-  value       = module.vertex_ai.agent_name
+output "project_number" {
+  description = "Project number for Vertex AI operations"
+  value       = module.vertex_ai.project_number
 }
 
-output "vertex_ai_agent_endpoint" {
-  description = "Vertex AI agent endpoint URL"
-  value       = module.vertex_ai.agent_endpoint
+# Data Science Setup Outputs
+output "ds_rag_corpus_name" {
+  description = "Full RAG corpus name from data science setup"
+  value       = module.data_science_setup.corpus_name
 }
 
-# RAG Outputs (Optional)
+output "ds_rag_corpus_id" {
+  description = "RAG corpus ID from data science setup"
+  value       = module.data_science_setup.corpus_id
+}
+
+output "agent_wheel_path" {
+  description = "Path to the uploaded agent wheel file"
+  value       = module.data_science_setup.agent_wheel_path
+}
+
+# RAG Outputs (Optional - from RAG module if configured)
 output "rag_corpus_id" {
-  description = "RAG corpus ID"
+  description = "RAG corpus ID from external RAG module (if configured)"
   value       = var.rag_corpus_id != null ? module.rag[0].corpus_id : null
 }
 
 output "rag_corpus_name" {
-  description = "RAG corpus name"
+  description = "RAG corpus name from external RAG module (if configured)"
   value       = var.rag_corpus_id != null ? module.rag[0].corpus_name : null
 }

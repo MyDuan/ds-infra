@@ -1,6 +1,6 @@
 output "vertex_ai_service_accounts" {
   description = "List of Vertex AI service accounts"
-  value       = local.vertex_ai_service_accounts
+  value       = local.potential_vertex_ai_accounts
 }
 
 output "primary_vertex_ai_service_account" {

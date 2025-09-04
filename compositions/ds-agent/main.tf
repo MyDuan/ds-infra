@@ -17,6 +17,23 @@ provider "google" {
   region  = var.location
 }
 
+# Enable required APIs
+resource "google_project_service" "required_apis" {
+  for_each = toset([
+    "aiplatform.googleapis.com",
+    "compute.googleapis.com",
+    "bigquery.googleapis.com",
+    "storage.googleapis.com",
+    "iam.googleapis.com",
+    "discoveryengine.googleapis.com"
+  ])
+  
+  project = var.project_id
+  service = each.value
+  
+  disable_on_destroy = false
+}
+
 # Storage Module
 module "storage" {
   source = "../../modules/storage"
@@ -38,7 +55,8 @@ module "iam" {
   project_id    = var.project_id
   project_number = data.google_project.current.number
   environment   = var.environment
-  tags          = var.tags
+  
+  depends_on = [google_project_service.required_apis]
 }
 
 # BigQuery Module
@@ -84,6 +102,26 @@ module "vertex_ai" {
     module.storage,
     module.iam,
     module.bigquery
+  ]
+}
+
+# Data Science Agent Setup Module (NEW)
+module "data_science_setup" {
+  source = "../../modules/data-science-setup"
+  
+  project_id                   = var.project_id
+  location                    = var.location
+  dataset_id                  = var.bq_dataset_id
+  agent_source_path           = "${path.root}/../../../adk-samples/python/agents/data-science"
+  staging_bucket_name         = module.storage.staging_bucket_name
+  force_rag_corpus_recreation = var.force_rag_corpus_recreation
+  deploy_to_agent_engine      = var.deploy_to_agent_engine
+  tags                        = var.tags
+  
+  depends_on = [
+    module.storage,
+    module.bigquery,
+    module.vertex_ai
   ]
 }
 

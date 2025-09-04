@@ -1,24 +1,14 @@
-output "agent_id" {
-  description = "Vertex AI agent ID"
-  value       = google_vertex_ai_agent.ds_agent.agent_id
+output "service_account_email" {
+  description = "Service account email for Agent Engine operations"
+  value       = google_service_account.agent_engine_sa.email
 }
 
-output "agent_name" {
-  description = "Vertex AI agent name"
-  value       = google_vertex_ai_agent.ds_agent.name
+output "service_account_id" {
+  description = "Service account ID for Agent Engine operations"
+  value       = google_service_account.agent_engine_sa.account_id
 }
 
-output "agent_display_name" {
-  description = "Vertex AI agent display name"
-  value       = google_vertex_ai_agent.ds_agent.display_name
-}
-
-output "endpoint_id" {
-  description = "Vertex AI endpoint ID"
-  value       = google_vertex_ai_endpoint.agent_endpoint.id
-}
-
-output "endpoint_name" {
-  description = "Vertex AI endpoint name"
-  value       = google_vertex_ai_endpoint.agent_endpoint.name
+output "project_number" {
+  description = "Project number for reference"
+  value       = data.google_project.current.number
 }

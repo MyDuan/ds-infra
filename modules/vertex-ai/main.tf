@@ -1,83 +1,43 @@
-# Vertex AI Agent
-resource "google_vertex_ai_agent" "ds_agent" {
+# Note: This configuration creates infrastructure for supporting Agent Engine
+# The actual agent deployment is handled by the data-science-setup module
+
+# Service account for Agent Engine operations
+resource "google_service_account" "agent_engine_sa" {
+  account_id   = "ds-agent-engine-${var.environment}"
+  display_name = "Data Science Agent Engine Service Account - ${var.environment}"
+  description  = "Service account for Data Science Agent Engine operations"
   project      = var.project_id
-  location     = var.location
-  agent_id     = "ds-agent-${var.environment}"
-  display_name = var.agent_display_name
-  description  = var.agent_description
-
-  # Agent configuration
-  agent_config {
-    # Use the specified model or default to Gemini Pro
-    model = length(var.vertex_ai_models) > 0 ? var.vertex_ai_models[0] : "projects/${var.project_id}/locations/${var.location}/publishers/google/models/gemini-1.5-pro"
-    
-    # System instruction for the agent
-    system_instruction = "You are a helpful data science assistant. You can help with data analysis, machine learning, and statistical questions. You have access to BigQuery data and can perform various analytical tasks."
-    
-    # Temperature for response generation
-    temperature = 0.1
-    
-    # Maximum number of tokens in response
-    max_tokens = 2048
-  }
-
-  # Tools configuration
-  dynamic "tools" {
-    for_each = var.bigquery_dataset_id != null ? [1] : []
-    content {
-      # BigQuery tool
-      bigquery_tool {
-        dataset_ids = [var.bigquery_dataset_id]
-      }
-    }
-  }
-
-  # RAG configuration (if corpus is provided)
-  dynamic "tools" {
-    for_each = var.rag_corpus_id != null ? [1] : []
-    content {
-      retrieval_tool {
-        vertex_ai_search {
-          data_store = "projects/${var.project_id}/locations/${var.location}/collections/default_collection/dataStores/${var.rag_corpus_id}"
-        }
-      }
-    }
-  }
-
-  # Security settings
-  security_settings {
-    enable_debugging_features = var.environment != "prod"
-  }
-
-  # Labels
-  labels = merge(
-    var.tags,
-    {
-      environment = var.environment
-      module      = "vertex-ai"
-    }
-  )
 }
 
-# Vertex AI Endpoint for the agent (if needed for custom serving)
-resource "google_vertex_ai_endpoint" "agent_endpoint" {
-  name         = "ds-agent-endpoint-${var.environment}"
-  display_name = "Data Science Agent Endpoint - ${var.environment}"
-  description  = "Endpoint for the Data Science Agent"
-  location     = var.location
-  project      = var.project_id
-
-  labels = merge(
-    var.tags,
-    {
-      environment = var.environment
-      module      = "vertex-ai"
-    }
-  )
+# IAM binding for BigQuery access
+resource "google_project_iam_member" "agent_bigquery_user" {
+  project = var.project_id
+  role    = "roles/bigquery.user"
+  member  = "serviceAccount:${google_service_account.agent_engine_sa.email}"
 }
 
-# IAM binding for the agent to access staging bucket
+resource "google_project_iam_member" "agent_bigquery_data_viewer" {
+  project = var.project_id
+  role    = "roles/bigquery.dataViewer"
+  member  = "serviceAccount:${google_service_account.agent_engine_sa.email}"
+}
+
+# IAM binding for Vertex AI access
+resource "google_project_iam_member" "agent_vertex_ai_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.agent_engine_sa.email}"
+}
+
+# IAM binding for the service account to access staging bucket
 resource "google_storage_bucket_iam_member" "agent_bucket_access" {
+  bucket = var.staging_bucket_name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.agent_engine_sa.email}"
+}
+
+# Additional IAM binding for default Vertex AI service account
+resource "google_storage_bucket_iam_member" "vertex_ai_bucket_access" {
   bucket = var.staging_bucket_name
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-aiplatform.iam.gserviceaccount.com"

@@ -1,189 +1,83 @@
 # Data Science Agent Infrastructure
 
-This Terraform configuration deploys a complete data science agent infrastructure on Google Cloud Platform (GCP), including:
-
-- **Vertex AI Agent** for AI-powered data science tasks
-- **BigQuery** for data storage and analytics
-- **Cloud Storage** for staging and temporary data
-- **IAM** roles and service accounts for secure access
-- **RAG (Retrieval-Augmented Generation)** support (optional)
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- GCP Project with billing enabled
-- Terraform >= 1.0 installed
-- `gcloud` CLI configured with appropriate permissions
-- Required GCP APIs enabled:
-  - Vertex AI API
-  - BigQuery API
-  - Cloud Storage API
-  - IAM API
-
-### 1. Configuration Setup
-
-First, set up your configuration files:
-
-```bash
-# Copy template configurations
-cp configs/dev.tfvars configs/dev.tfvars.local
-cp environments/dev/terraform.tfvars.example environments/dev/terraform.tfvars
-```
-
-Edit `configs/dev.tfvars.local` and replace placeholders:
-
-```hcl
-project_id = "your-actual-project-id"
-bq_dataset_id = "your_dataset_name"
-# ... other configurations
-```
-
-> 📝 See [CONFIG_SETUP.md](./CONFIG_SETUP.md) for detailed configuration instructions.
-
-### 2. Deploy Infrastructure
-
-Using the deployment script (recommended):
-
-```bash
-./deploy.sh -c configs/dev.tfvars.local init
-./deploy.sh -c configs/dev.tfvars.local apply
-```
-
-Or manually:
-
-```bash
-cd environments/dev
-terraform init
-terraform apply -var-file="../../configs/dev.tfvars.local"
-```
-
-### 3. Test Deployment
-
-```bash
-./test-agent.sh dev
-```
+Terraform configuration for deploying a complete data science agent system on Google Cloud Platform.
 
 ## 📁 Project Structure
 
 ```text
 ds-infra/
-├── compositions/           # High-level compositions
-│   └── ds-agent/          # Main data science agent composition
-├── modules/               # Reusable Terraform modules
-│   ├── bigquery/         # BigQuery resources
-│   ├── iam/              # IAM roles and service accounts
-│   ├── rag/              # RAG corpus management
-│   ├── storage/          # Cloud Storage buckets
-│   └── vertex-ai/        # Vertex AI agent
-├── environments/          # Environment-specific configurations
-│   ├── dev/              # Development environment
-│   └── prod/             # Production environment
-├── configs/              # Configuration templates
-│   ├── dev.tfvars        # Development config template
-│   └── prod.tfvars       # Production config template
-├── deploy.sh             # Deployment automation script
-├── test-agent.sh         # Testing script
-└── .gitignore           # Git ignore rules for sensitive files
+├── compositions/
+│   └── ds-agent/              # Main deployment entry point
+│       ├── main.tf           # Orchestrates all modules
+│       ├── variables.tf      # Input variables
+│       ├── outputs.tf        # Output values
+│       └── terraform.tfvars.example
+├── modules/                   # Reusable Terraform modules
+│   ├── bigquery/             # BigQuery dataset and tables
+│   ├── iam/                  # IAM roles and service accounts
+│   ├── storage/              # Cloud Storage buckets
+│   ├── vertex-ai/            # Vertex AI service accounts
+│   └── data-science-setup/   # Agent building and deployment
+├── configs/                   # Configuration files
+│   ├── dev.tfvars           # Development template
+│   └── dev.tfvars.local     # Your actual values (gitignored)
+└── README.md                 # This file
 ```
 
-## 🔧 Configuration
+## 🚀 Deployment Steps
 
-### Environment Variables
-
-All configuration can be provided via:
-
-- Terraform variable files (`.tfvars`)
-- Environment variables (prefixed with `TF_VAR_`)
-- Command line arguments
-
-### Key Variables
-
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `project_id` | GCP Project ID | ✅ | - |
-| `environment` | Environment name | ✅ | - |
-| `bq_dataset_id` | BigQuery dataset ID | ✅ | - |
-| `location` | GCP region | ❌ | `us-central1` |
-| `staging_bucket_name` | Staging bucket name | ❌ | Auto-generated |
-
-## 🔒 Security
-
-- **Sensitive data protection**: All actual configuration values are gitignored
-- **IAM best practices**: Principle of least privilege
-- **Deletion protection**: Configurable for production environments
-- **Encryption**: All data encrypted at rest and in transit
-
-## 🌍 Multi-Environment Support
-
-The infrastructure supports multiple environments:
-
-- **Development** (`dev`): Fast iteration, minimal resources
-- **Production** (`prod`): High availability, enhanced security
-
-Each environment has its own:
-
-- State file
-- Configuration
-- Resource naming
-
-## 📚 Documentation
-
-- [Configuration Setup Guide](./CONFIG_SETUP.md)
-- [Deployment Modes](./DEPLOYMENT_MODES.md)
-- [Best Practices](./README_BEST_PRACTICES.md)
-- [Terraform Concepts](./TERRAFORM_CONCEPTS.md)
-- [Usage Examples](./USAGE_EXAMPLES.md)
-
-## 🛠️ Advanced Usage
-
-### Custom Modules
-
-Add your own modules in the `modules/` directory and reference them in compositions.
-
-### Remote State
-
-Configure remote state storage for team collaboration:
-
-```hcl
-terraform {
-  backend "gcs" {
-    bucket = "your-terraform-state-bucket"
-    prefix = "terraform/ds-agent/dev"
-  }
-}
-```
-
-### CI/CD Integration
-
-The deployment script supports automation:
+### 1. Setup Configuration
 
 ```bash
-./deploy.sh -c configs/prod.tfvars.local -a apply  # Auto-approve
+# Copy configuration template
+cp configs/dev.tfvars configs/dev.tfvars.local
 ```
 
-## 🐛 Troubleshooting
+Edit `configs/dev.tfvars.local`:
 
-### Common Issues
+```hcl
+project_id = "your-project-id"
+location   = "us-east4"
+environment = "dev"
+bq_dataset_id = "forecasting_sticker_sales"
+staging_bucket_name = "your-project-id-ds-agent-staging-dev"
+recreate_rag_corpus = true
+deploy_to_agent_engine = true
+```
 
-1. **Permission denied**: Ensure your GCP credentials have the required roles
-2. **API not enabled**: Enable required GCP APIs in your project
-3. **Resource conflicts**: Check for existing resources with similar names
+### 2. Deploy
 
-### Getting Help
+```bash
+cd compositions/ds-agent
+terraform init
+terraform apply -var-file="../../configs/dev.tfvars.local" -auto-approve
+```
 
-1. Check the logs: `terraform plan` for validation issues
-2. Validate configuration: `./deploy.sh validate`
-3. Run tests: `./test-agent.sh dev`
+This will automatically:
+- Create BigQuery dataset and load sample data
+- Set up Cloud Storage and IAM
+- Build RAG corpus
+- Deploy agent to Vertex AI Agent Engine
 
-## 🤝 Contributing
+### 3. Access Agent
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+Get agent details:
+```bash
+terraform output
+```
 
-## 📄 License
+Use in Python:
+```python
+import vertexai
+agent_engine = vertexai.agent_engines.get('projects/PROJECT_ID/locations/LOCATION/reasoningEngines/AGENT_ID')
+response = agent_engine.query(content="Analyze the sales data")
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 🛠️ What Gets Deployed
+
+- **BigQuery**: Dataset with training/test data (229K+ rows)
+- **Storage**: Staging bucket for agent artifacts  
+- **IAM**: Service accounts with minimal permissions
+- **RAG**: Knowledge corpus with documentation
+- **Agent Engine**: Multi-agent system on Vertex AI
+

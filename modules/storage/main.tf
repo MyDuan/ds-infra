@@ -4,10 +4,8 @@ resource "google_storage_bucket" "staging" {
   location = var.location
   project  = var.project_id
 
-  # Prevent accidental deletion
-  lifecycle {
-    prevent_destroy = var.enable_deletion_protection
-  }
+  # Enable uniform bucket-level access to comply with org policy
+  uniform_bucket_level_access = true
 
   # Versioning for agent packages
   versioning {
@@ -27,7 +25,7 @@ resource "google_storage_bucket" "staging" {
   lifecycle_rule {
     condition {
       age                   = 7
-      with_state           = "NONCURRENT_TIME"
+      with_state           = "ARCHIVED"
       num_newer_versions   = 3
     }
     action {
@@ -45,19 +43,6 @@ resource "google_storage_bucket" "staging" {
 
   # Labels
   labels = merge(var.labels, var.tags)
-}
-
-# Bucket IAM for Vertex AI service accounts
-resource "google_storage_bucket_iam_member" "vertex_ai_access" {
-  bucket = google_storage_bucket.staging.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-aiplatform.iam.gserviceaccount.com"
-}
-
-resource "google_storage_bucket_iam_member" "compute_engine_access" {
-  bucket = google_storage_bucket.staging.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${data.google_project.current.number}-compute@developer.gserviceaccount.com"
 }
 
 # Data source to get current project

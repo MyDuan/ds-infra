@@ -69,15 +69,9 @@ variable "bq_dataset_location" {
 # Vertex AI Configuration
 variable "vertex_ai_models" {
   description = "List of Vertex AI models to configure"
-  type = list(object({
-    name    = string
-    version = string
-  }))
-  default = [
-    {
-      name    = "gemini-2.0-flash-exp"
-      version = "latest"
-    }
+  type        = list(string)
+  default     = [
+    "gemini-2.0-flash-exp"
   ]
 }
 
@@ -86,6 +80,19 @@ variable "rag_corpus_id" {
   description = "RAG corpus ID (optional)"
   type        = string
   default     = null
+}
+
+# Data Science Agent Setup
+variable "force_rag_corpus_recreation" {
+  description = "Force recreation of RAG corpus"
+  type        = bool
+  default     = false
+}
+
+variable "deploy_to_agent_engine" {
+  description = "Whether to deploy to Agent Engine"
+  type        = bool
+  default     = true
 }
 
 # Security and Compliance
