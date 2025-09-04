@@ -26,6 +26,40 @@ ds-infra/
 
 ## 🚀 Deployment Steps
 
+### Prerequisites
+
+**Required directory structure:**
+```text
+your-project/
+├── adk-samples/                    # Clone from GitHub
+│   └── python/agents/data-science/
+└── ds-infra/                      # This repository
+```
+
+**Setup commands:**
+```bash
+# 1. Clone the required agent source code
+git clone https://github.com/google/adk-samples.git
+
+# 2. Setup Python environment
+cd adk-samples/python/agents/data-science
+uv sync
+source .venv/bin/activate
+
+# 3. Configure agent environment
+cp .env-example .env
+# Edit .env with your project settings:
+# GOOGLE_CLOUD_PROJECT='your-project-id'
+# GOOGLE_CLOUD_LOCATION='us-east4' 
+# BQ_COMPUTE_PROJECT_ID='your-project-id'
+# BQ_DATA_PROJECT_ID='your-project-id'
+# BQ_DATASET_ID='forecasting_sticker_sales'
+# Leave BQML_RAG_CORPUS_NAME='' (Terraform will fill this)
+
+# 4. Return to ds-infra directory
+cd ../../../ds-infra
+```
+
 ### 1. Setup Configuration
 
 ```bash
@@ -33,13 +67,13 @@ ds-infra/
 cp configs/dev.tfvars configs/dev.tfvars.local
 ```
 
-Edit `configs/dev.tfvars.local`:
+Edit `configs/dev.tfvars.local` to match your `.env` settings:
 
 ```hcl
-project_id = "your-project-id"
-location   = "us-east4"
+project_id = "your-project-id"           # Same as GOOGLE_CLOUD_PROJECT in .env
+location   = "us-east4"                  # Same as GOOGLE_CLOUD_LOCATION in .env  
 environment = "dev"
-bq_dataset_id = "forecasting_sticker_sales"
+bq_dataset_id = "forecasting_sticker_sales"  # Same as BQ_DATASET_ID in .env
 staging_bucket_name = "your-project-id-ds-agent-staging-dev"
 recreate_rag_corpus = true
 deploy_to_agent_engine = true
