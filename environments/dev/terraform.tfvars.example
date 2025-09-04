@@ -1,0 +1,10 @@
+# Development Environment Variables
+# Copy your actual values here (this file is gitignored)
+
+# Example:
+# project_id = "your-actual-project-id"
+# environment = "dev"
+# bq_dataset_id = "your_dataset_id"
+# staging_bucket_name = "your-project-staging-bucket"
+
+# See ../../configs/dev.tfvars for a complete example
